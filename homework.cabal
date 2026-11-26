@@ -102,7 +102,6 @@ library
     Level1
     Level2
     Level3
-    Point3
     MyIO
   build-depends:
     meta-utils

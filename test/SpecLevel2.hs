@@ -5,7 +5,6 @@ import Data.List (sort)
 import Level1 (Point (..))
 import Level2
 import MyIO
-import Point3
 import System.IO.Error (isUserError, tryIOError)
 import Test.Prelude
 

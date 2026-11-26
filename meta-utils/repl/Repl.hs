@@ -5,7 +5,6 @@
 module Repl () where
 
 import MyIO
-import Point3
 import Level1
 import Level2
 import Level3

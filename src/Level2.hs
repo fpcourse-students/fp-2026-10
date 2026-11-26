@@ -7,7 +7,6 @@ import Data.List (genericLength)
 import Level1 (Point (..))
 import MetaUtils (todo)
 import MyIO
-import Point3
 
 
 -- 2.1. Рассахаривание do.
@@ -64,8 +63,16 @@ edges2 = todo "edges2"
 -- и разделите её на общую массу с помощью div.
 -- В centerMain прочитайте все тела до конца ввода (isEof) и выведите три
 -- координаты центра масс в порядке x, y, z. Используйте операции MyIO.
--- Тип Point3 из ДЗ 9 и его экземпляры уже даны в Point3.hs.
 -- Запустите приложение из app/Main.hs командой make run.
+
+-- Трёхмерная точка из ДЗ 9. Обход идёт в порядке x, y, z.
+data Point3 a = Point3 a a a
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+
+instance Applicative Point3 where
+  pure x = Point3 x x x
+
+  Point3 f g h <*> Point3 x y z = Point3 (f x) (g y) (h z)
 
 data Object = Object
   { objMass :: Int
