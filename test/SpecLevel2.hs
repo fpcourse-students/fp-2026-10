@@ -1,11 +1,13 @@
 module SpecLevel2 where
 
+import Control.Exception (evaluate)
 import Data.IORef (modifyIORef', newIORef, readIORef)
 import Data.List (sort)
 import Level1 (Point (..))
 import Level2
 import MyIO
 import System.IO.Error (isUserError, tryIOError)
+import System.Timeout (timeout)
 import Test.Prelude
 
 tests :: NamedTests
@@ -47,10 +49,17 @@ testSumAndMult = TestList
 
 testEdges :: Test
 testEdges = TestList
-  [ TestCase $ assertEqual "edges1" result $ take (length result) edges1
-  , TestCase $ assertEqual "edges2" result $ take (length result) edges2
+  [ checkPrefix "edges1" edges1
+  , checkPrefix "edges2" edges2
   ]
   where
+    checkPrefix name triples = TestCase do
+      prefix <- timeout (3 * 1000000) $ evaluate $ force $ take (length result) triples
+      case prefix of
+        Just actual -> assertEqual name result actual
+        Nothing -> assertFailure $ name ++ ": за 3 секунды не получены первые 20 троек. "
+          ++ "Проверьте, конечен ли внутренний перебор при фиксированной гипотенузе."
+
     result =
       [ (5, 4, 3)
       , (10, 8, 6)
