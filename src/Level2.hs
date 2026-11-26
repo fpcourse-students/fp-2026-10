@@ -11,20 +11,21 @@ import Point3
 
 
 -- 2.1. Рассахаривание do.
--- Перепишите sugared без do-нотации по правилам с лекции.
--- Используйте (>>=) и (>>). Сохраните порядок и число действий:
--- отметку mark нужно выполнить после первого чтения и до второго.
--- Напишите desugared самостоятельно, без вызова sugared.
+-- Перепишите sugared через (>>=) и (>>), без do-нотации и вызова sugared.
+-- Сохраните порядок чтений и отметки mark. Что происходит, если первая
+-- строка не подходит под образец [x, y]? Выразите эту ветвь с помощью
+-- MonadFail. Текст сообщения об ошибке можно выбрать самостоятельно.
+-- Например, sugared (Just [1]) (Just ()) == Nothing.
 
-sugared :: Monad m => m Int -> m () -> m Int
-sugared readNumber mark = do
-  x <- readNumber
+sugared :: MonadFail m => m [Int] -> m () -> m Int
+sugared readRow mark = do
+  [x, y] <- readRow
   mark
-  let offset = 2 * x
-  y <- readNumber
-  pure (offset + y)
+  let offset = x + y
+  rest <- readRow
+  pure (offset + sum rest)
 
-desugared :: Monad m => m Int -> m () -> m Int
+desugared :: MonadFail m => m [Int] -> m () -> m Int
 desugared = todo "desugared"
 
 

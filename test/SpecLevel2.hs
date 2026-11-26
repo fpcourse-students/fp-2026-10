@@ -1,10 +1,12 @@
 module SpecLevel2 where
 
+import Data.IORef (modifyIORef', newIORef, readIORef)
 import Data.List (sort)
 import Level1 (Point (..))
 import Level2
 import MyIO
 import Point3
+import System.IO.Error (isUserError, tryIOError)
 import Test.Prelude
 
 tests :: NamedTests
@@ -18,14 +20,23 @@ tests = nameTests 2
 
 testDesugared :: Test
 testDesugared = TestList
-  [ propertyToTest "результат и последовательность действий" \(x :: Int) y ->
-      let input = world [x, 99, y, 17] in
-      let mark = readInt >>= writeInt in
-      runUnsafeMyIO (sugared readInt mark) input === runUnsafeMyIO (desugared readInt mark) input
-  , propertyToTest "Maybe: любой шаг может завершиться неудачей" \(a :: Maybe Int) (b :: Maybe ()) ->
-      sugared a b === desugared a b
-  , TestCase $ assertEqual "порядок ветвления в списке"
-      (sugared [2, 3] [(), ()]) (desugared [2, 3] [(), ()])
+  [ TestCase $ assertEqual "Maybe: несовпадение образца в успешном чтении"
+      Nothing (desugared (Just [1]) (Just ()))
+  , propertyToTest "Maybe: успешное сопоставление и результат отметки" \x y mark ->
+      let row = Just [x, y] in sugared row mark === desugared row mark
+  , TestCase $ assertEqual "список: несовпадение отбрасывает только текущую ветвь"
+      [3, 6, 12, 10, 7, 10, 16, 14] (desugared [[], [1, 2], [3, 3, 3], [2, 5]] [()])
+  , TestCase do
+      trace <- newIORef []
+      let readRow = modifyIORef' trace (++ ["read"]) >> pure [2, 3]
+      result <- desugared readRow (modifyIORef' trace (++ ["mark"]))
+      assertEqual "результат двух чтений" 10 result
+      assertEqual "порядок действий" ["read", "mark", "read"] =<< readIORef trace
+  , TestCase do
+      result <- tryIOError $ desugared (pure [1, 2, 3]) (assertFailure "mark после несовпадения")
+      case result of
+        Left err -> assertBool "fail в IO" (isUserError err)
+        Right n -> assertFailure $ "Ожидалась ошибка сопоставления, получено " ++ show n
   ]
 
 testSumAndMult :: Test
